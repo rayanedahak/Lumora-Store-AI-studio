@@ -2508,7 +2508,7 @@ export default function App() {
           </div>
 
           <div className="border-t border-white/10 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-slate-400 text-center sm:text-left">
-            <p>© {new Date().getFullYear()} Lumora Lighting Inc. All rights reserved.</p>
+            <p>© 2027 Lumora Lighting Inc. All rights reserved.</p>
             <div className="flex flex-wrap items-center justify-center gap-6">
               <a href="#about" className="hover:text-white transition-colors">
                 Our Story
