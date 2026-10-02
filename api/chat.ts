@@ -152,6 +152,7 @@ Key Product Facts:
 - Lighting Modes: 16 static RGB colors + 4 dynamic gradient fade modes, 5V universal USB cable with inline switch, rated for 30,000+ hours.
 - Shipping & Guarantee: Free tracked express shipping (processed in 1–3 business days, delivered in 4–7 business days). Backed by a 30-day money-back guarantee and 1-year hardware warranty.
 - Order Tracking: Customers can enter their Order ID (such as LUM-1042) in the Order Tracking section in the footer.
+- Support Email: getlumora.shop@gmail.com
 - Never mention dropshipping or third-party suppliers. Keep responses helpful, concise (2–4 sentences unless more detail is requested), and formatting-clean.`;
 
     const contents = messages

@@ -2463,10 +2463,10 @@ export default function App() {
                 </li>
                 <li>
                   <a
-                    href="#contact"
+                    href="mailto:getlumora.shop@gmail.com"
                     className="inline-block py-0.5 hover:text-[#FFA500] transition-colors"
                   >
-                    concierge@lumoraglow.com
+                    getlumora.shop@gmail.com
                   </a>
                 </li>
               </ul>

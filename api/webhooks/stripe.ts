@@ -373,7 +373,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         100
       );
       const customerEmail = sanitizeText(
-        session.customer_details?.email || 'customer@lumoraglow.com',
+        session.customer_details?.email || 'getlumora.shop@gmail.com',
         254
       ).toLowerCase();
       const customerPhone = sanitizeText(
