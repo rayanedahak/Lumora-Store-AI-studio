@@ -91,7 +91,16 @@ export const LumoraChatWidget: React.FC = () => {
         }),
       });
 
-      const data = await res.json();
+      const rawText = await res.text();
+      let data: { reply?: string; error?: string } = {};
+      try {
+        data = rawText ? JSON.parse(rawText) : {};
+      } catch {
+        throw new Error(
+          'Lumora Concierge is temporarily unavailable. Please use our Contact form below.'
+        );
+      }
+
       if (!res.ok) {
         throw new Error(data.error || 'Unable to get a response right now.');
       }
@@ -101,7 +110,9 @@ export const LumoraChatWidget: React.FC = () => {
         {
           id: `model-${Date.now()}`,
           role: 'model',
-          text: data.reply,
+          text:
+            data.reply ||
+            'I can help you explore the Lumora Smart Sunset Lamp, our combo deals, or room lighting setups.',
         },
       ]);
     } catch (err) {

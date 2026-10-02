@@ -219,7 +219,9 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({
 
       setIsLoadingRates(true);
       try {
-        const res = await fetch('https://open.er-api.com/v6/latest/CAD');
+        const res = await fetch('https://open.er-api.com/v6/latest/CAD', {
+          signal: AbortSignal.timeout(5000),
+        });
         if (!res.ok) {
           throw new Error(`Exchange rate API status ${res.status}`);
         }

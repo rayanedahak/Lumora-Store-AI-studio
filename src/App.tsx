@@ -49,19 +49,33 @@ import { useCurrency } from './context/CurrencyContext';
 
 // High-Resolution Product & Lifestyle Visual Assets (YCX-010 Accurate Hardware)
 const HERO_IMAGE =
-  '/src/assets/images/lumora_hero_living_room_1790814490818.jpg';
+  '/images/lumora_hero_living_room_1790814490818.jpg';
 const YCX_STUDIO_HERO =
-  '/src/assets/images/lumora_ycx010_studio_hero_1790894525684.jpg';
+  '/images/lumora_ycx010_studio_hero_1790894525684.jpg';
 const YCX_GOLDEN_SILHOUETTE =
-  '/src/assets/images/lumora_ycx010_golden_silhouette_1790894545824.jpg';
+  '/images/lumora_ycx010_golden_silhouette_1790894545824.jpg';
 const YCX_AURORA_CYAN =
-  '/src/assets/images/lumora_ycx010_aurora_cyan_purple_1790894537185.jpg';
+  '/images/lumora_ycx010_aurora_cyan_purple_1790894537185.jpg';
 const YCX_MODULAR_PARTS =
-  '/src/assets/images/lumora_ycx010_modular_components_1790894555027.jpg';
+  '/images/lumora_ycx010_modular_components_1790894555027.jpg';
 const UGC_FLORAL_VANITY =
-  '/src/assets/images/lumora_ugc_floral_vanity_1790814529123.jpg';
+  '/images/lumora_ugc_floral_vanity_1790814529123.jpg';
 const UGC_READING_CORNER =
-  '/src/assets/images/lumora_ugc_reading_corner_1790814538988.jpg';
+  '/images/lumora_ugc_reading_corner_1790814538988.jpg';
+
+async function safeParseApiJson<T = Record<string, unknown>>(
+  res: Response
+): Promise<T> {
+  const text = await res.text();
+  if (!text) return {} as T;
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    throw new Error(
+      'Unable to connect to the checkout server. Please verify your API deployment and environment variables.'
+    );
+  }
+}
 
 interface MoodPreset {
   id: string;
@@ -404,9 +418,12 @@ export default function App() {
         const res = await fetch('/api/create-checkout-session', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ quantity: cartPricing.quantity }),
+          body: JSON.stringify({
+            quantity: cartPricing.quantity,
+            origin: window.location.origin,
+          }),
         });
-        const data = await res.json();
+        const data = await safeParseApiJson<{ url?: string }>(res);
         if (!cancelled && res.ok && data.url) {
           setCartStripeUrl(data.url);
         }
@@ -443,7 +460,7 @@ export default function App() {
           message: contactMessage.trim(),
         }),
       });
-      const data = await res.json();
+      const data = await safeParseApiJson<{ error?: string }>(res);
 
       if (res.ok) {
         setContactSuccess(true);
@@ -476,7 +493,7 @@ export default function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: newsletterEmail.trim() }),
       });
-      const data = await res.json();
+      const data = await safeParseApiJson<{ error?: string }>(res);
 
       if (res.ok) {
         setNewsletterSuccess(true);
@@ -503,9 +520,12 @@ export default function App() {
 
     try {
       const res = await fetch(
-        `/api/orders/track/${encodeURIComponent(cleanId)}`
+        `/api/orders/track?orderId=${encodeURIComponent(cleanId)}`
       );
-      const data = await res.json();
+      const data = await safeParseApiJson<{
+        order?: TrackedOrderInfo;
+        error?: string;
+      }>(res);
 
       if (res.ok && data.order) {
         setTrackedOrder(data.order);

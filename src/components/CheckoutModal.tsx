@@ -60,6 +60,20 @@ export function getComboPricing(qty: number) {
   return { quantity: cleanQty, unitPrice, subtotal, discount, total };
 }
 
+async function safeParseJsonResponse<T = Record<string, unknown>>(
+  res: Response
+): Promise<T> {
+  const rawText = await res.text();
+  if (!rawText) return {} as T;
+  try {
+    return JSON.parse(rawText) as T;
+  } catch {
+    throw new Error(
+      'Unable to connect to the checkout service. Please verify your Stripe environment variables on Vercel.'
+    );
+  }
+}
+
 export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   isOpen,
   onClose,
@@ -98,7 +112,10 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         body: JSON.stringify({ sessionId: initialSessionId }),
       })
         .then(async (r) => {
-          const data = await r.json();
+          const data = await safeParseJsonResponse<{
+            order?: CompletedOrderDetails;
+            error?: string;
+          }>(r);
           if (r.ok && data?.order) {
             setCompletedOrder(data.order);
           } else {
@@ -127,14 +144,22 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         const res = await fetch('/api/create-checkout-session', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ quantity: pricing.quantity }),
+          body: JSON.stringify({
+            quantity: pricing.quantity,
+            origin: window.location.origin,
+          }),
         });
-        const data = await res.json();
+        const data = await safeParseJsonResponse<{
+          url?: string;
+          error?: string;
+        }>(res);
         if (!cancelled) {
           if (res.ok && data.url) {
             setSessionUrl(data.url);
           } else {
-            setSessionError(data.error || 'Could not initialize Stripe checkout');
+            setSessionError(
+              data.error || 'Could not initialize Stripe checkout'
+            );
           }
         }
       } catch (err) {
@@ -182,9 +207,15 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       const res = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ quantity: pricing.quantity }),
+        body: JSON.stringify({
+          quantity: pricing.quantity,
+          origin: window.location.origin,
+        }),
       });
-      const data = await res.json();
+      const data = await safeParseJsonResponse<{
+        url?: string;
+        error?: string;
+      }>(res);
       if (res.ok && data.url) {
         setSessionUrl(data.url);
         try {
