@@ -80,6 +80,26 @@ async function parseJsonBody(req: VercelRequest): Promise<Record<string, unknown
   }
 }
 
+function getSmartConciergeFallback(
+  userQuery: string,
+  formattedBasePrice: string
+): string {
+  const q = userQuery.toLowerCase();
+  if (q.includes('wifi') || q.includes('wi-fi') || q.includes('app') || q.includes('remote')) {
+    return 'No Wi-Fi is required! The Lumora YCX-010 pairs directly with your iOS or Android phone via Bluetooth in seconds, and also includes a 24-key RGB wireless remote control right in the box.';
+  }
+  if (q.includes('combo') || q.includes('deal') || q.includes('discount') || q.includes('price') || q.includes('cost') || q.includes('promo') || q.includes('code')) {
+    return `1 Lumora Lamp is ${formattedBasePrice} ($69.99 CAD base). With our Combo Deals, you save $5.00 CAD on every additional lamp (Buy 2 for $134.98 CAD, Buy 3 for $199.97 CAD), plus you can enter code LUMORA10 at Stripe Checkout for 10% off your first order!`;
+  }
+  if (q.includes('ship') || q.includes('delivery') || q.includes('track') || q.includes('long')) {
+    return 'We offer free tracked express shipping on all orders! Orders are processed within 1–3 business days and delivered in 4–7 business days. You can check your status anytime in the Order Tracking section in our footer.';
+  }
+  if (q.includes('bedroom') || q.includes('mood') || q.includes('color') || q.includes('vibe') || q.includes('room')) {
+    return 'For a cozy bedroom or evening wind-down, we recommend Golden Hour (2200K warm sunset core) or Crimson Dusk (1800K deep horizon). For creative studios, Aurora Halo projects an electric turquoise rim with an ultraviolet core.';
+  }
+  return `The Lumora YCX-010 Smart Sunset Lamp (${formattedBasePrice}) features a cast-aluminum optical head, crystal glass dome lens, weighted iron base, Bluetooth app control + 24-key remote, and free 4–7 day tracked shipping. Use code LUMORA10 at checkout for 10% off!`;
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   console.log('API KEY EXISTS:', !!process.env.GEMINI_API_KEY);
 
@@ -143,6 +163,9 @@ Key Product Facts:
       return;
     }
 
+    const lastUserMessage =
+      contents[contents.length - 1]?.parts?.[0]?.text || '';
+
     const rawApiKey = process.env.GEMINI_API_KEY || '';
     const apiKey = rawApiKey.replace(/^["']+|["']+$/g, '').trim();
 
@@ -151,23 +174,25 @@ Key Product Facts:
       apiKey === 'MY_GEMINI_API_KEY' ||
       apiKey === 'YOUR_GEMINI_API_KEY'
     ) {
-      sendJson(res, 503, {
-        error:
-          'Lumora Concierge is temporarily unavailable. Please ensure GEMINI_API_KEY is configured in your environment variables.',
+      console.warn('GEMINI_API_KEY is missing or placeholder; using fallback concierge response.');
+      sendJson(res, 200, {
+        reply: getSmartConciergeFallback(lastUserMessage, safeFormattedPrice),
+        modelUsed: 'lumora-concierge-fallback',
       });
       return;
     }
 
-    // Do NOT set httpOptions.timeout < 10000 because generativelanguage.googleapis.com
-    // rejects X-Server-Timeout < 10s with HTTP 400 ("Manually set deadline 8s is too short. Minimum allowed deadline is 10s.")
     const ai = new GoogleGenAI({
       apiKey,
     });
 
-    const candidateModels = ['gemini-2.5-flash', 'gemini-3.8-flash'];
+    const candidateModels = [
+      'gemini-2.5-flash',
+      'gemini-3-flash-preview',
+      'gemini-3.1-flash-lite-preview',
+    ];
     let responseText = '';
     let modelUsed = candidateModels[0];
-    let lastError: unknown = null;
 
     for (const candidateModel of candidateModels) {
       try {
@@ -177,7 +202,7 @@ Key Product Facts:
           config: {
             systemInstruction,
             temperature: 0.7,
-            abortSignal: AbortSignal.timeout(8500),
+            abortSignal: AbortSignal.timeout(7500),
           },
         });
         if (response.text) {
@@ -186,25 +211,21 @@ Key Product Facts:
           break;
         }
       } catch (err) {
-        lastError = err;
         console.error(`Gemini model ${candidateModel} error:`, err);
       }
-    }
-
-    if (!responseText && lastError) {
-      throw lastError;
     }
 
     sendJson(res, 200, {
       reply:
         responseText ||
-        'I can help you explore the Lumora Smart Sunset Lamp, our combo deals, or room lighting setups. What would you like to know?',
+        getSmartConciergeFallback(lastUserMessage, safeFormattedPrice),
       modelUsed,
     });
   } catch (err) {
-    console.error('POST /api/chat failed:', err);
-    sendJson(res, 500, {
-      error: 'Unable to reach Lumora Concierge right now.',
+    console.error('POST /api/chat unexpected error:', err);
+    sendJson(res, 200, {
+      reply: getSmartConciergeFallback('', '$69.99 CAD'),
+      modelUsed: 'lumora-concierge-fallback',
     });
   }
 }
