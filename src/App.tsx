@@ -82,8 +82,12 @@ interface MoodPreset {
   name: string;
   kelvin: string;
   hex: string;
+  glowColor: string;
+  image: string;
   overlayGradient: string;
+  ambientHalo: string;
   description: string;
+  shortDesc: string;
 }
 
 const MOOD_PRESETS: MoodPreset[] = [
@@ -92,36 +96,52 @@ const MOOD_PRESETS: MoodPreset[] = [
     name: 'Golden Hour',
     kelvin: '2200K Sunset Core',
     hex: '#FFA500',
+    glowColor: 'rgba(255, 165, 0, 0.8)',
+    image: '/images/lumora_aura_golden_hour_1790978030293.jpg',
     overlayGradient:
-      'radial-gradient(circle at 65% 45%, rgba(255, 165, 0, 0.28), rgba(255, 94, 0, 0.14) 45%, transparent 75%)',
-    description: 'Warm California dusk glow for effortless evening relaxation.',
+      'radial-gradient(circle at 62% 40%, rgba(255, 165, 0, 0.75) 0%, rgba(255, 110, 0, 0.45) 35%, rgba(255, 60, 0, 0.2) 65%, transparent 85%)',
+    ambientHalo: '0 0 60px rgba(255, 165, 0, 0.6), 0 0 120px rgba(255, 100, 0, 0.35)',
+    description: 'Warm California dusk glow for effortless evening relaxation and golden radiance.',
+    shortDesc: 'Warm California dusk halo',
   },
   {
     id: 'crimson-dusk',
     name: 'Crimson Dusk',
     kelvin: '1800K Deep Horizon',
-    hex: '#FF4D2D',
+    hex: '#FF334B',
+    glowColor: 'rgba(255, 51, 75, 0.85)',
+    image: '/images/lumora_aura_crimson_dusk_1790977996977.jpg',
     overlayGradient:
-      'radial-gradient(circle at 65% 45%, rgba(255, 77, 45, 0.34), rgba(180, 25, 65, 0.18) 45%, transparent 75%)',
-    description: 'Rich amber-red projection designed for intimate late-night vibes.',
+      'radial-gradient(circle at 62% 40%, rgba(255, 45, 75, 0.8) 0%, rgba(220, 20, 60, 0.5) 35%, rgba(140, 0, 40, 0.25) 65%, transparent 85%)',
+    ambientHalo: '0 0 60px rgba(255, 51, 75, 0.65), 0 0 120px rgba(220, 20, 60, 0.4)',
+    description: 'Rich fiery ruby-red projection designed for intimate late-night vibes and dramatic contrast.',
+    shortDesc: 'Intimate deep ruby-red aura',
   },
   {
     id: 'aurora-cyan',
     name: 'Aurora Halo',
     kelvin: 'Cyan-Violet Spectrum',
     hex: '#06B6D4',
+    glowColor: 'rgba(6, 182, 212, 0.85)',
+    image: '/images/lumora_aura_aurora_cyan_1790978007871.jpg',
     overlayGradient:
-      'radial-gradient(circle at 65% 45%, rgba(168, 85, 247, 0.32), rgba(6, 182, 212, 0.24) 45%, transparent 75%)',
-    description: 'Electric turquoise rim with a deep ultraviolet-purple core.',
+      'radial-gradient(circle at 62% 40%, rgba(6, 182, 212, 0.85) 0%, rgba(168, 85, 247, 0.6) 38%, rgba(59, 130, 246, 0.25) 68%, transparent 85%)',
+    ambientHalo: '0 0 60px rgba(6, 182, 212, 0.7), 0 0 120px rgba(168, 85, 247, 0.45)',
+    description: 'Electric turquoise rim with a deep ultraviolet-purple core for futuristic ambient calm.',
+    shortDesc: 'Electric cyan & violet glow',
   },
   {
     id: 'solar-amber',
     name: 'Solar Amber',
     kelvin: '2700K Warm Sanctuary',
     hex: '#F59E0B',
+    glowColor: 'rgba(245, 158, 11, 0.8)',
+    image: '/images/lumora_aura_solar_amber_1790978018590.jpg',
     overlayGradient:
-      'radial-gradient(circle at 65% 45%, rgba(245, 158, 11, 0.30), rgba(217, 119, 6, 0.12) 45%, transparent 75%)',
-    description: 'Soft architectural warmth that replaces harsh overhead bulbs.',
+      'radial-gradient(circle at 62% 40%, rgba(245, 158, 11, 0.8) 0%, rgba(217, 119, 6, 0.5) 35%, rgba(251, 191, 36, 0.22) 65%, transparent 85%)',
+    ambientHalo: '0 0 60px rgba(245, 158, 11, 0.6), 0 0 120px rgba(217, 119, 6, 0.35)',
+    description: 'Soft architectural warmth that replaces harsh overhead bulbs with honey-gold serenity.',
+    shortDesc: 'Luminous honey-gold warmth',
   },
 ];
 
@@ -722,10 +742,10 @@ export default function App() {
         <section
           ref={heroSectionRef}
           id="home"
-          className="relative w-full overflow-hidden bg-[#1A2A3A] pt-24 pb-14 sm:pt-28 sm:pb-20 lg:min-h-[88vh] lg:flex lg:items-center"
+          className="relative w-full overflow-hidden bg-[#1A2A3A] pt-24 pb-14 sm:pt-28 sm:pb-20 lg:min-h-[90vh] lg:flex lg:items-center"
         >
-          {/* Full-Bleed Responsive Hero Background Image with Fluid Scroll Parallax */}
-          <div className="absolute inset-0 z-0 overflow-hidden bg-gradient-to-br from-[#1A2A3A] via-[#2A1F2D] to-[#FFA500]/30">
+          {/* Full-Bleed Responsive Hero Background Image with Fluid Scroll Parallax & Live Aura Lighting */}
+          <div className="absolute inset-0 z-0 overflow-hidden bg-gradient-to-br from-[#1A2A3A] via-[#2A1F2D] to-[#FFA500]/25">
             <motion.div
               style={{
                 y: heroBgY,
@@ -733,137 +753,332 @@ export default function App() {
               }}
               className="absolute -inset-y-10 inset-x-0 will-change-transform origin-center"
             >
-              <img
-                src={HERO_IMAGE}
-                alt="Modern luxury living room at dusk illuminated by the Lumora smart sunset projection lamp"
+              <motion.img
+                key={activeMood.id}
+                src={activeMood.image}
+                alt={`Modern luxury living room illuminated by the Lumora ${activeMood.name} projection lamp`}
                 referrerPolicy="no-referrer"
-                className="w-full h-full object-cover object-center opacity-85 sm:opacity-90"
+                initial={{ opacity: 0.25 }}
+                animate={{ opacity: 0.95 }}
+                transition={{ duration: 0.4 }}
+                className="w-full h-full object-cover object-center"
               />
+              {/* Vibrant Projection Aura Flare */}
               <motion.div
-                className="pointer-events-none absolute inset-0 transition-colors duration-300"
+                key={`flare-${activeMood.id}`}
+                initial={{ opacity: 0, scale: 0.96 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.4 }}
+                className="pointer-events-none absolute inset-0 mix-blend-screen"
                 style={{
                   background: activeMood.overlayGradient,
                   opacity: heroAuraOpacity,
                 }}
               />
             </motion.div>
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-b sm:bg-gradient-to-r from-[#1A2A3A]/95 via-[#1A2A3A]/80 to-[#1A2A3A]/45" />
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#1A2A3A] via-transparent to-[#1A2A3A]/50" />
+
+            {/* Smart Gradient Scrim: Solid dark behind text on left, clear on right so the projection colors pop brilliantly */}
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-b lg:bg-gradient-to-r from-[#1A2A3A] via-[#1A2A3A]/85 lg:via-[#1A2A3A]/55 to-transparent" />
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#1A2A3A] via-transparent to-[#1A2A3A]/40" />
           </div>
 
           <motion.div
             style={{ y: heroForegroundY }}
             className="relative z-10 mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-10 lg:px-8 will-change-transform"
           >
-            <div className="max-w-2xl space-y-6">
-              <motion.p
-                initial={{ opacity: 0, y: fadeUpY }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: baseDuration }}
-                className="text-xs sm:text-sm font-semibold tracking-wider text-[#FFA500]"
-              >
-                Lumora Flagship Edition · App + 24-Key RGB Remote · Crystal Glass Optics
-              </motion.p>
-
-              {/* Responsive H1: 36px (text-4xl) on mobile -> 48px (text-5xl) on tablet -> 56px on desktop */}
-              <motion.h1
-                initial={{ opacity: 0, y: fadeUpY }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{
-                  duration: baseDuration,
-                  delay: getStaggerDelay(1, 0.06),
-                }}
-                className="text-4xl sm:text-5xl lg:text-[56px] font-extrabold tracking-tight text-white leading-[1.12] text-balance"
-              >
-                Transform Your Space.{' '}
-                <span className="text-[#FFA500]">Elevate Your Vibe.</span>
-              </motion.h1>
-
-              {/* Body Copy: 16px (text-base) on mobile, 18px on tablet/desktop */}
-              <motion.p
-                initial={{ opacity: 0, y: fadeUpY }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{
-                  duration: baseDuration,
-                  delay: getStaggerDelay(2, 0.06),
-                }}
-                className="text-base sm:text-[18px] text-slate-200 leading-relaxed max-w-xl"
-              >
-                The app-controlled sunset lamp that turns any room into a
-                golden-hour paradise. 16 million colors. Endless moods.
-              </motion.p>
-
-              {/* Stacked Full-Width Button Group on Mobile (flex-col sm:flex-row) */}
-              <motion.div
-                initial={{ opacity: 0, y: fadeUpY }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{
-                  duration: baseDuration,
-                  delay: getStaggerDelay(3, 0.06),
-                }}
-                className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 pt-2"
-              >
-                <motion.button
-                  type="button"
-                  whileHover={useLightMotion ? undefined : { scale: 1.03 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => handleOpenCheckout(1)}
-                  className="w-full sm:w-auto min-h-[52px] inline-flex items-center justify-center gap-2.5 rounded-xl bg-[#FFA500] px-8 py-4 text-base font-extrabold text-[#1A2A3A] shadow-[0_0_30px_rgba(255,165,0,0.45)] transition-shadow hover:shadow-[0_0_42px_rgba(255,165,0,0.7)] whitespace-nowrap cursor-pointer"
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+              {/* Left Column: Value Copy & Interactive Mood Controls */}
+              <div className="lg:col-span-7 space-y-6">
+                <motion.p
+                  initial={{ opacity: 0, y: fadeUpY }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: baseDuration }}
+                  className="text-xs sm:text-sm font-semibold tracking-wider text-[#FFA500]"
                 >
-                  <span>Buy Now - {formatPrice(69.99)}</span>
-                  <ArrowRight className="h-4 w-4 shrink-0" />
-                </motion.button>
+                  Lumora Flagship Edition · App + 24-Key RGB Remote · Crystal Glass Optics
+                </motion.p>
 
-                <motion.a
-                  href="#shop"
-                  whileHover={useLightMotion ? undefined : { scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="w-full sm:w-auto min-h-[52px] inline-flex items-center justify-center rounded-xl border border-white/40 bg-white/10 px-7 py-4 text-base font-bold text-white backdrop-blur-xs transition-colors hover:border-white hover:bg-white/15 whitespace-nowrap text-center"
+                {/* Responsive H1: 36px (text-4xl) on mobile -> 48px (text-5xl) on tablet -> 56px on desktop */}
+                <motion.h1
+                  initial={{ opacity: 0, y: fadeUpY }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    duration: baseDuration,
+                    delay: getStaggerDelay(1, 0.06),
+                  }}
+                  className="text-4xl sm:text-5xl lg:text-[56px] font-extrabold tracking-tight text-white leading-[1.12] text-balance"
                 >
-                  See It In Action
-                </motion.a>
-              </motion.div>
+                  Transform Your Space.{' '}
+                  <span
+                    className="transition-colors duration-400"
+                    style={{ color: activeMood.hex }}
+                  >
+                    Elevate Your Vibe.
+                  </span>
+                </motion.h1>
 
-              {/* Interactive Mood Switcher (2x2 Grid on Mobile, 4 Columns on Tablet/Desktop) */}
-              <motion.div
-                initial={{ opacity: 0, y: fadeUpY }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{
-                  duration: baseDuration,
-                  delay: getStaggerDelay(4, 0.06),
-                }}
-                className="pt-6 border-t border-white/15 max-w-lg"
-              >
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-xs sm:text-sm text-slate-300 mb-3">
-                  <span className="font-semibold text-white">
-                    Preview Live Room Projection Aura:
-                  </span>
-                  <span className="text-[#FFA500] font-medium">
-                    {activeMood.name} · {activeMood.kelvin}
-                  </span>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 rounded-xl bg-black/40 p-2 backdrop-blur-xs border border-white/10">
-                  {MOOD_PRESETS.map((preset) => {
-                    const isSelected = activeMood.id === preset.id;
-                    return (
-                      <button
-                        key={preset.id}
-                        type="button"
-                        onClick={() => setActiveMood(preset)}
-                        className={`min-h-[44px] flex items-center justify-center gap-2 rounded-lg py-2 px-3 text-xs sm:text-sm font-semibold transition-all whitespace-nowrap cursor-pointer ${
-                          isSelected
-                            ? 'bg-white text-[#1A2A3A] shadow-xs'
-                            : 'text-slate-200 hover:text-white bg-white/5 sm:bg-transparent'
-                        }`}
-                      >
+                {/* Body Copy: 16px (text-base) on mobile, 18px on tablet/desktop */}
+                <motion.p
+                  initial={{ opacity: 0, y: fadeUpY }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    duration: baseDuration,
+                    delay: getStaggerDelay(2, 0.06),
+                  }}
+                  className="text-base sm:text-[18px] text-slate-200 leading-relaxed max-w-xl"
+                >
+                  The app-controlled sunset lamp that turns any room into a
+                  golden-hour paradise. 16 million colors. Endless moods.
+                </motion.p>
+
+                {/* Stacked Full-Width Button Group on Mobile (flex-col sm:flex-row) */}
+                <motion.div
+                  initial={{ opacity: 0, y: fadeUpY }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    duration: baseDuration,
+                    delay: getStaggerDelay(3, 0.06),
+                  }}
+                  className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 pt-2"
+                >
+                  <motion.button
+                    type="button"
+                    whileHover={useLightMotion ? undefined : { scale: 1.03 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => handleOpenCheckout(1)}
+                    className="w-full sm:w-auto min-h-[52px] inline-flex items-center justify-center gap-2.5 rounded-xl px-8 py-4 text-base font-extrabold text-[#1A2A3A] transition-all whitespace-nowrap cursor-pointer shadow-lg"
+                    style={{
+                      backgroundColor: activeMood.hex,
+                      boxShadow: `0 0 30px ${activeMood.glowColor}`,
+                    }}
+                  >
+                    <span>Buy Now - {formatPrice(69.99)}</span>
+                    <ArrowRight className="h-4 w-4 shrink-0" />
+                  </motion.button>
+
+                  <motion.a
+                    href="#shop"
+                    whileHover={useLightMotion ? undefined : { scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="w-full sm:w-auto min-h-[52px] inline-flex items-center justify-center rounded-xl border border-white/40 bg-white/10 px-7 py-4 text-base font-bold text-white backdrop-blur-xs transition-colors hover:border-white hover:bg-white/15 whitespace-nowrap text-center"
+                  >
+                    See It In Action
+                  </motion.a>
+                </motion.div>
+
+                {/* Interactive Mood Switcher */}
+                <motion.div
+                  initial={{ opacity: 0, y: fadeUpY }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    duration: baseDuration,
+                    delay: getStaggerDelay(4, 0.06),
+                  }}
+                  className="pt-6 border-t border-white/15 max-w-xl"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="relative flex h-2.5 w-2.5">
                         <span
-                          className="h-2.5 w-2.5 rounded-full shrink-0"
-                          style={{ backgroundColor: preset.hex }}
+                          className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+                          style={{ backgroundColor: activeMood.hex }}
                         />
-                        <span>{preset.name}</span>
-                      </button>
-                    );
-                  })}
+                        <span
+                          className="relative inline-flex rounded-full h-2.5 w-2.5"
+                          style={{ backgroundColor: activeMood.hex }}
+                        />
+                      </span>
+                      <span className="font-bold text-white text-xs sm:text-sm">
+                        Preview Live Room Projection Aura:
+                      </span>
+                    </div>
+                    <span
+                      className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold backdrop-blur-md border transition-all"
+                      style={{
+                        backgroundColor: `${activeMood.hex}25`,
+                        borderColor: `${activeMood.hex}70`,
+                        color: activeMood.hex,
+                      }}
+                    >
+                      <Sparkles className="h-3 w-3" />
+                      <span>
+                        {activeMood.name} · {activeMood.kelvin}
+                      </span>
+                    </span>
+                  </div>
+
+                  {/* 4 Interactive Mood Presets with Vivid Color Feedback */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 rounded-xl bg-black/50 p-2.5 backdrop-blur-md border border-white/15">
+                    {MOOD_PRESETS.map((preset) => {
+                      const isSelected = activeMood.id === preset.id;
+                      return (
+                        <button
+                          key={preset.id}
+                          type="button"
+                          onClick={() => setActiveMood(preset)}
+                          className={`min-h-[50px] flex flex-col items-center justify-center rounded-lg py-2 px-2 text-xs font-semibold transition-all whitespace-nowrap cursor-pointer relative ${
+                            isSelected
+                              ? 'bg-white text-[#1A2A3A] shadow-xl scale-[1.02]'
+                              : 'text-slate-200 hover:text-white bg-white/5 hover:bg-white/10'
+                          }`}
+                          style={
+                            isSelected
+                              ? {
+                                  outline: `2px solid ${preset.hex}`,
+                                  boxShadow: `0 0 24px ${preset.hex}99`,
+                                }
+                              : undefined
+                          }
+                        >
+                          <div className="flex items-center gap-1.5 mb-0.5">
+                            <span
+                              className="h-3 w-3 rounded-full shrink-0 shadow-sm"
+                              style={{ backgroundColor: preset.hex }}
+                            />
+                            <span className="font-bold tracking-tight">{preset.name}</span>
+                          </div>
+                          <span
+                            className={`text-[10px] font-medium leading-none ${
+                              isSelected ? 'text-slate-600' : 'text-slate-400'
+                            }`}
+                          >
+                            {preset.kelvin.split(' ')[0]}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <p className="mt-2.5 text-xs text-slate-300 flex items-center gap-1.5">
+                    <span
+                      className="inline-block h-1.5 w-1.5 rounded-full transition-colors"
+                      style={{ backgroundColor: activeMood.hex }}
+                    />
+                    <span>
+                      {activeMood.shortDesc} — {activeMood.description}
+                    </span>
+                  </p>
+                </motion.div>
+              </div>
+
+              {/* Right Column: Dedicated Interactive Live Room Projection Frame */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: baseDuration, delay: 0.1 }}
+                className="lg:col-span-5"
+              >
+                <div
+                  className="relative rounded-2xl overflow-hidden border border-white/20 bg-slate-900/80 backdrop-blur-xl transition-all duration-500 shadow-2xl group"
+                  style={{
+                    boxShadow: activeMood.ambientHalo,
+                  }}
+                >
+                  {/* Viewport Top Bar */}
+                  <div className="flex items-center justify-between px-4 py-3 bg-black/60 border-b border-white/10 backdrop-blur-md">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="h-2.5 w-2.5 rounded-full animate-pulse"
+                        style={{ backgroundColor: activeMood.hex }}
+                      />
+                      <span className="text-[11px] font-extrabold uppercase tracking-wider text-white">
+                        Live Room Projection
+                      </span>
+                    </div>
+                    <span
+                      className="text-[11px] font-bold px-2.5 py-0.5 rounded-full text-white border"
+                      style={{
+                        backgroundColor: `${activeMood.hex}30`,
+                        borderColor: `${activeMood.hex}80`,
+                      }}
+                    >
+                      {activeMood.name}
+                    </span>
+                  </div>
+
+                  {/* High-Resolution Live Room Projection Photo Viewport */}
+                  <div className="relative aspect-16/10 sm:aspect-16/9 overflow-hidden bg-black">
+                    <motion.img
+                      key={`preview-${activeMood.id}`}
+                      initial={{ opacity: 0.35, scale: 1.05 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.4 }}
+                      src={activeMood.image}
+                      alt={`Live projection preview of Lumora ${activeMood.name} in living room`}
+                      className="w-full h-full object-cover"
+                    />
+
+                    {/* Saturated Aura Ray Overlay */}
+                    <div
+                      className="absolute inset-0 pointer-events-none mix-blend-screen transition-opacity duration-300"
+                      style={{
+                        background: activeMood.overlayGradient,
+                      }}
+                    />
+
+                    {/* Live Aura Color Spec Badge Overlay */}
+                    <div className="absolute bottom-3 left-3 pointer-events-none flex items-center gap-2 rounded-lg bg-black/75 px-3 py-1.5 backdrop-blur-md border border-white/20 shadow-lg">
+                      <div
+                        className="h-2.5 w-2.5 rounded-full shadow-sm"
+                        style={{ backgroundColor: activeMood.hex }}
+                      />
+                      <span className="text-xs font-semibold text-white">
+                        {activeMood.kelvin}
+                      </span>
+                    </div>
+
+                    <div className="absolute top-3 right-3 pointer-events-none rounded-md bg-black/60 px-2 py-1 text-[10px] font-mono text-slate-300 backdrop-blur-md border border-white/10">
+                      Crystal Optics · 16M RGB
+                    </div>
+                  </div>
+
+                  {/* Viewport Bottom Info & Quick Switch Strip */}
+                  <div className="p-4 bg-gradient-to-t from-black/90 to-black/60 border-t border-white/10 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs text-slate-200">
+                        <span className="font-bold text-white mr-1.5">Atmosphere:</span>
+                        {activeMood.shortDesc}
+                      </p>
+                    </div>
+
+                    {/* Mini Quick-Switch Indicators */}
+                    <div className="flex items-center gap-2 pt-1 border-t border-white/10">
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                        Quick Select:
+                      </span>
+                      <div className="flex items-center gap-1.5">
+                        {MOOD_PRESETS.map((preset) => {
+                          const isSel = preset.id === activeMood.id;
+                          return (
+                            <button
+                              key={`mini-${preset.id}`}
+                              type="button"
+                              onClick={() => setActiveMood(preset)}
+                              title={preset.name}
+                              className={`h-5 px-2 rounded-full text-[10px] font-semibold transition-all cursor-pointer flex items-center gap-1 ${
+                                isSel
+                                  ? 'bg-white text-[#1A2A3A] font-bold shadow-md scale-105'
+                                  : 'bg-white/10 text-slate-300 hover:bg-white/20 hover:text-white'
+                              }`}
+                              style={
+                                isSel
+                                  ? {
+                                      outline: `1.5px solid ${preset.hex}`,
+                                    }
+                                  : undefined
+                              }
+                            >
+                              <span
+                                className="h-2 w-2 rounded-full"
+                                style={{ backgroundColor: preset.hex }}
+                              />
+                              <span>{preset.name.split(' ')[0]}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </motion.div>
             </div>
