@@ -1,0 +1,8 @@
+{
+  "name": "Lumora — Smart Sunset Projection Lamp",
+  "description": "Transform Your Space. Elevate Your Vibe. The app-controlled smart sunset projection lamp with 16 million colors and endless moods.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
