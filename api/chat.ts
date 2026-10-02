@@ -80,24 +80,9 @@ async function parseJsonBody(req: VercelRequest): Promise<Record<string, unknown
   }
 }
 
-function withTimeout<T>(promise: Promise<T>, timeoutMs = 8000): Promise<T> {
-  return new Promise<T>((resolve, reject) => {
-    const timer = setTimeout(() => {
-      reject(new Error('Request timed out'));
-    }, timeoutMs);
-    promise
-      .then((val) => {
-        clearTimeout(timer);
-        resolve(val);
-      })
-      .catch((err) => {
-        clearTimeout(timer);
-        reject(err);
-      });
-  });
-}
-
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  console.log('API KEY EXISTS:', !!process.env.GEMINI_API_KEY);
+
   if (req.method === 'OPTIONS') {
     sendJson(res, 200, { ok: true });
     return;
@@ -113,10 +98,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const messages = Array.isArray(body?.messages)
       ? (body.messages as Array<{ role?: string; text?: string }>)
       : [];
-    const modelTier =
-      body?.modelTier === 'pro' || body?.modelTier === 'general'
-        ? body.modelTier
-        : 'fast';
     const activeCurrency = body?.activeCurrency || 'CAD';
     const formattedBasePrice = body?.formattedBasePrice || '$69.99 CAD';
 
@@ -127,13 +108,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       : 'CAD';
     const safeFormattedPrice =
       sanitizeText(formattedBasePrice, 40) || '$69.99 CAD';
-
-    const selectedModel =
-      modelTier === 'pro'
-        ? 'gemini-3.1-pro-preview'
-        : modelTier === 'general'
-        ? 'gemini-3.5-flash'
-        : 'gemini-3.1-flash-lite';
 
     const systemInstruction = `You are the Lumora Lighting Concierge & Interior Vibe Advisor for Lumora ("Transform Your Space. Elevate Your Vibe.").
 Your role is to help shoppers choose the right sunset mood, understand the Lumora YCX-010 Smart Sunset Projection Lamp hardware, explain combo deals, and answer shipping or order tracking questions in a warm, concise, modern luxury tone.
@@ -169,7 +143,9 @@ Key Product Facts:
       return;
     }
 
-    const apiKey = (process.env.GEMINI_API_KEY || '').trim();
+    const rawApiKey = process.env.GEMINI_API_KEY || '';
+    const apiKey = rawApiKey.replace(/^["']+|["']+$/g, '').trim();
+
     if (
       !apiKey ||
       apiKey === 'MY_GEMINI_API_KEY' ||
@@ -177,59 +153,56 @@ Key Product Facts:
     ) {
       sendJson(res, 503, {
         error:
-          'Lumora Concierge is temporarily unavailable. Please use our Contact form below.',
+          'Lumora Concierge is temporarily unavailable. Please ensure GEMINI_API_KEY is configured in your environment variables.',
       });
       return;
     }
 
+    // Do NOT set httpOptions.timeout < 10000 because generativelanguage.googleapis.com
+    // rejects X-Server-Timeout < 10s with HTTP 400 ("Manually set deadline 8s is too short. Minimum allowed deadline is 10s.")
     const ai = new GoogleGenAI({
       apiKey,
-      httpOptions: {
-        timeout: 8000,
-        headers: {
-          'User-Agent': 'aistudio-build',
-        },
-      },
     });
 
+    const candidateModels = ['gemini-2.5-flash', 'gemini-3.8-flash'];
     let responseText = '';
-    try {
-      const response = await withTimeout(
-        ai.models.generateContent({
-          model: selectedModel,
+    let modelUsed = candidateModels[0];
+    let lastError: unknown = null;
+
+    for (const candidateModel of candidateModels) {
+      try {
+        const response = await ai.models.generateContent({
+          model: candidateModel,
           contents,
           config: {
             systemInstruction,
             temperature: 0.7,
-            abortSignal: AbortSignal.timeout(8000),
+            abortSignal: AbortSignal.timeout(8500),
           },
-        }),
-        8000
-      );
-      responseText = response.text || '';
-    } catch {
-      const fallbackRes = await withTimeout(
-        ai.models.generateContent({
-          model: 'gemini-3-flash-preview',
-          contents,
-          config: {
-            systemInstruction,
-            temperature: 0.7,
-            abortSignal: AbortSignal.timeout(8000),
-          },
-        }),
-        8000
-      );
-      responseText = fallbackRes.text || '';
+        });
+        if (response.text) {
+          responseText = response.text;
+          modelUsed = candidateModel;
+          break;
+        }
+      } catch (err) {
+        lastError = err;
+        console.error(`Gemini model ${candidateModel} error:`, err);
+      }
+    }
+
+    if (!responseText && lastError) {
+      throw lastError;
     }
 
     sendJson(res, 200, {
       reply:
         responseText ||
         'I can help you explore the Lumora Smart Sunset Lamp, our combo deals, or room lighting setups. What would you like to know?',
-      modelUsed: selectedModel,
+      modelUsed,
     });
-  } catch {
+  } catch (err) {
+    console.error('POST /api/chat failed:', err);
     sendJson(res, 500, {
       error: 'Unable to reach Lumora Concierge right now.',
     });
